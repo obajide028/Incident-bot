@@ -1,6 +1,7 @@
 package com.incidentbot.incident_processor.consumer;
 
 import com.incidentbot.incident_processor.model.IncidentEvent;
+import com.incidentbot.incident_processor.service.IncidentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -16,8 +17,8 @@ public class incidentEventConsumer {
     private final IncidentService incidentService;
 
     @KafkaListener(
-            topics = {"${app.kafka.topics.errors}", "{app.kafka.topics.warnings}"},
-            groupId = "{spring.kafka.consumer.group-id}"
+            topics = {"logs.errors", "logs.warnings"},
+            groupId = "incident-processor-group"
     )
     public void consume(IncidentEvent event, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         log.info(

@@ -1,0 +1,12 @@
+# Copy this to application.yml and fill in your values
+spring:
+  ai:
+    anthropic:
+      api-key: YOUR_ANTHROPIC_API_KEY_HERE
+  datasource:
+    url: jdbc:postgresql://localhost:5433/incident_db
+    username: incident_user
+    password: incident_pass
+app:
+  slack:
+    webhook-url: YOUR_SLACK_WEBHOOK_URL_HERE

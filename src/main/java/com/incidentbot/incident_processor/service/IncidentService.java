@@ -5,6 +5,7 @@ import com.incidentbot.incident_processor.ai.AiDiagnosticService;
 import com.incidentbot.incident_processor.model.Incident;
 import com.incidentbot.incident_processor.model.IncidentEvent;
 import com.incidentbot.incident_processor.model.IncidentStatus;
+import com.incidentbot.incident_processor.notification.SlackNotificationService;
 import com.incidentbot.incident_processor.repository.IncidentRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class IncidentService {
 
     private final IncidentRepository incidentRepository;
     private final AiDiagnosticService aiDiagnosticService;
-    private final SLackNotificationService sLackNotificationService;
+    private final SlackNotificationService sLackNotificationService;
 
     /***
      *  Full pipeline: receive event -> AI diagnosis -> save -> notify
