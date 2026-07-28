@@ -32,8 +32,20 @@ public class IncidentService {
     public void processEvent(IncidentEvent event){
         log.info("Processing incident service: {}", event.serviceName());
 
-        // step 1 - get Ai diagnosis
+        // Deduplication check - skip if an active incident already exists for this error
+        boolean isDuplicate = incidentRepository.existsByServiceNameAndErrorTypeAndStatusIn(
+                event.serviceName(),
+                event.errorType(),
+                List.of(IncidentStatus.OPEN, IncidentStatus.DIAGNOSED)
+        );
 
+        if(isDuplicate){
+            log.info("Depulicate incident detected for service [{}] error [{}] - skipping",
+                    event.serviceName(), event.errorType());
+            return;
+        }
+
+        // step 1 - get Ai diagnosis
         String diagnosis = aiDiagnosticService.diagnose(event);
 
         // Step 2 - build and save the incident

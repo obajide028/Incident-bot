@@ -24,6 +24,13 @@ public class SlackNotificationService {
     private final ObjectMapper objectMapper;
     private final RestClient restClient = RestClient.create();
 
+    private static final Map<Severity, String> SEVERITY_COLORS = Map.of(
+            Severity.CRITICAL, "#FF0000",
+            Severity.HIGH,     "#FF6600",
+            Severity.MEDIUM,   "#FFD700",
+            Severity.LOW,      "#36A64F"
+    );
+
     public void sendAlert(Incident incident) {
         if (webhookUrl == null || webhookUrl.isBlank()) {
             log.info("Slack webhook not configured — skipping alert for incident: {}", incident.getId());
@@ -49,21 +56,39 @@ public class SlackNotificationService {
     }
 
     private Map<String, Object> buildPayload(Incident incident) {
-        return Map.of("blocks", List.of(
-                headerBlock(severityEmoji(incident.getSeverity()) + " Incident — " + incident.getServiceName()),
+        String color = SEVERITY_COLORS.getOrDefault(incident.getSeverity(), "#808080");
+
+        List<Map<String, Object>> blocks = List.of(
+                headerBlock(incident),
+                divider(),
                 fieldsBlock(incident),
-                textBlock("*Error:*\n" + incident.getErrorMessage()),
-                textBlock("*AI Diagnosis:*\n" + incident.getAiDiagnosis()),
-                contextBlock("ID: `" + incident.getId() + "` | Occurred: " + incident.getOccurredAt())
-        ));
+                divider(),
+                textBlock("*Error Message*\n```" + incident.getErrorMessage() + "```"),
+                divider(),
+                textBlock("*AI Diagnosis*\n" + truncate(incident.getAiDiagnosis(), 2800)),
+                divider(),
+                contextBlock(incident)
+        );
+
+        return Map.of(
+                "attachments", List.of(
+                        Map.of(
+                                "color",  color,
+                                "blocks", blocks
+                        )
+                )
+        );
     }
 
     // ── Block builders ────────────────────────────────────────────────────────
 
-    private Map<String, Object> headerBlock(String text) {
+    private Map<String, Object> headerBlock(Incident incident) {
+        String title = severityEmoji(incident.getSeverity())
+                + "  *" + incident.getServiceName().toUpperCase() + "* — "
+                + incident.getErrorType();
         return Map.of(
-                "type", "header",
-                "text", Map.of("type", "plain_text", "text", text)
+                "type", "section",
+                "text", mrkdwn(title)
         );
     }
 
@@ -71,10 +96,10 @@ public class SlackNotificationService {
         return Map.of(
                 "type", "section",
                 "fields", List.of(
-                        mrkdwn("*Service:*\n" + incident.getServiceName()),
-                        mrkdwn("*Severity:*\n" + incident.getSeverity()),
-                        mrkdwn("*Environment:*\n" + incident.getEnvironment()),
-                        mrkdwn("*Status:*\n" + incident.getStatus())
+                        mrkdwn("*Service*\n" + incident.getServiceName()),
+                        mrkdwn("*Severity*\n" + incident.getSeverity()),
+                        mrkdwn("*Environment*\n" + incident.getEnvironment()),
+                        mrkdwn("*Status*\n" + incident.getStatus())
                 )
         );
     }
@@ -86,10 +111,16 @@ public class SlackNotificationService {
         );
     }
 
-    private Map<String, Object> contextBlock(String text) {
+    private Map<String, Object> divider() {
+        return Map.of("type", "divider");
+    }
+
+    private Map<String, Object> contextBlock(Incident incident) {
         return Map.of(
                 "type", "context",
-                "elements", List.of(mrkdwn(text))
+                "elements", List.of(
+                        mrkdwn("ID: `" + incident.getId() + "`  |  Occurred: " + incident.getOccurredAt())
+                )
         );
     }
 
@@ -106,5 +137,10 @@ public class SlackNotificationService {
             case MEDIUM   -> ":yellow_circle:";
             case LOW      -> ":white_circle:";
         };
+    }
+
+    private String truncate(String text, int maxLength) {
+        if (text == null) return "No diagnosis available.";
+        return text.length() <= maxLength ? text : text.substring(0, maxLength) + "...";
     }
 }

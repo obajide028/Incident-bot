@@ -21,4 +21,10 @@ public interface IncidentRepository extends JpaRepository<Incident, UUID> {
     List<Incident> findByServiceNameAndStatus(String serviceName, IncidentStatus status);
 
     List<Incident> findTop10ByOrderByOccurredAtDesc();
+
+    boolean existsByServiceNameAndErrorTypeAndStatusIn(
+            String serviceName,
+            String errorType,
+            List<IncidentStatus> statuses
+    );
 }
