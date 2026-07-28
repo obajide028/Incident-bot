@@ -9,4 +9,4 @@ spring:
     password: incident_pass
 app:
   slack:
-    webhook-url: YOUR_SLACK_WEBHOOK_URL_HERE
+    webhook-url:

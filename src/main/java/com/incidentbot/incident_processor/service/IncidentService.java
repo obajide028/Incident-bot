@@ -51,7 +51,9 @@ public class IncidentService {
                 .build();
 
         Incident saved = incidentRepository.save(incident);
-        log.info("Incident saved: {}", saved.getId(), saved.getServiceName());
+        log.info("Incident saved: {} | service: {}", saved.getId(), saved.getServiceName());
+
+        sLackNotificationService.sendAlert(saved);
     }
 
     public List<Incident> getAllIncidents() {
